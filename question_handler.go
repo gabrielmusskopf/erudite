@@ -72,6 +72,10 @@ func (h *QuestionHandler) HandleQuestionCreation(w http.ResponseWriter, r *http.
 			return
 		}
 	}
+	if rigth == 0 {
+		writeError("must have one rigth answer", 400, w)
+		return
+	}
 
 	QuestionDB.Save(question)
 	write(ResponseID{Id: question.Id}, w)
