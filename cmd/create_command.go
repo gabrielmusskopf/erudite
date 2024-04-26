@@ -17,11 +17,10 @@ type CreateCommand struct {
 func NewCreateCommand() CreateCommand {
 	cmd := CreateCommand{}
 	flagSet := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
-	flagSet.Usage = func() { fmt.Print(cmd.Usage()) }
 
-	tag := &Flag[Flags]{ShortName: "t", LongName: "tag", Usage: "question related tags"}
-	wrongAnswers := &Flag[Flags]{ShortName: "wa", LongName: "wrong-answer", Usage: "question wrong answer(s)"}
-	rigthAnswer := &Flag[string]{ShortName: "ra", LongName: "rigth-answer", Usage: "question rigth answer"}
+	tag := &Flag[Flags]{ShortName: "t", LongName: "tag", Usage: "Question related tags. Optional."}
+	wrongAnswers := &Flag[Flags]{ShortName: "wa", LongName: "wrong-answer", Usage: "Question wrong answer(s)."}
+	rigthAnswer := &Flag[string]{ShortName: "ra", LongName: "rigth-answer", Usage: "Question rigth answer."}
 
 	flagSet.Var(&tag.Value, tag.LongName, tag.Usage)
 	flagSet.Var(&tag.Value, tag.ShortName, tag.Usage)
@@ -37,6 +36,8 @@ func NewCreateCommand() CreateCommand {
 	cmd.WrongAnswersFlag = wrongAnswers
 	cmd.RigthAnswerFlag = rigthAnswer
 
+	flagSet.Usage = cmd.Usage
+
 	return cmd
 }
 
@@ -48,6 +49,11 @@ func (c CreateCommand) Run(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("text is missing")
 	}
+
+	if args[0] == "-h" || args[0] == "--help" {
+		return c.flagSet.Parse(args)
+	}
+
 	c.Text = args[0]
 
 	err := c.flagSet.Parse(args[1:])
@@ -71,9 +77,14 @@ func (c CreateCommand) Run(args []string) error {
 	return nil
 }
 
-func (c CreateCommand) Usage() string {
-	return fmt.Sprintf(
-		"%s <text>:\n%s\n  %s\n  %s\n",
+func (c CreateCommand) Description() string {
+	return "Create questions with provided tags and answers."
+}
+
+func (c CreateCommand) Usage() {
+	fmt.Printf(
+		"%s\n\n%s <text>:\n%s\n%s\n%s",
+		c.Description(),
 		c.Name(),
 		c.TagFlag.FullUsage(),
 		c.WrongAnswersFlag.FullUsage(),

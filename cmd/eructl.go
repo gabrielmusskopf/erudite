@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 )
 
 func checkServer() {
@@ -16,6 +17,7 @@ func checkServer() {
 
 var commands = []Command{
 	NewCreateCommand(),
+	NewGetCommand(),
 }
 
 type Flags []string
@@ -41,7 +43,7 @@ func (f Flag[T]) Names() (short, long string) {
 }
 
 func (f Flag[T]) FullUsage() string {
-	s := ""
+	s := "  "
 	short, long := f.Names()
 	if short != "" {
 		s += "-" + short
@@ -49,21 +51,24 @@ func (f Flag[T]) FullUsage() string {
 	if long != "" {
 		s += ", --" + long
 	}
-	s += ":\n    " + f.Usage + "\n"
+	s += ":" + strings.Repeat(" ", 25-len(s)) + f.Usage
 	return s
 }
 
 type Command interface {
 	Name() string
+	Description() string
 	Run([]string) error
-	Usage() string
 }
 
 func usage() {
 	fmt.Print("Usage: eructl [command] [flags|arguments]\n\n")
+	fmt.Print("Commands:\n")
 	for _, cmd := range commands {
-		fmt.Print(cmd.Usage())
+		space := 10 - len(cmd.Name())
+		fmt.Printf("  %s %s %s\n", cmd.Name(), strings.Repeat(" ", space), cmd.Description())
 	}
+	fmt.Print("\nTip: eructl [command] -h\n")
 }
 
 func main() {
