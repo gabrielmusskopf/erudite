@@ -4,45 +4,21 @@ import (
 	"flag"
 	"fmt"
 	"net/http"
+	"os"
 )
 
 func checkServer() {
 	_, err := http.Get("http://localhost:8080/ping")
 	if err != nil {
-		//panic(err)
-		//not panic for now...
-		fmt.Println(err)
+		panic(err)
 	}
 }
 
-/*
-eruadm
-erucli
-eructl
-
-text string
-tags []string
-answer Answer
-
-Answer {
-    text string
-    correct bool
+var commands = []Command{
+	NewCreateCommand(),
 }
 
-eructl "My question here"
-    --tag "GO"
-    --tag "Programming"
-    --answer "Answer here"
-    --rigth-answer "Answer here"
-*/
-
 type Flags []string
-
-var (
-	tags         Flags
-	wrongAnswers Flags
-	rigthAnswer  string
-)
 
 func (i *Flags) String() string {
 	return fmt.Sprintf("%v", *i)
@@ -53,18 +29,63 @@ func (i *Flags) Set(value string) error {
 	return nil
 }
 
-func main() {
-	checkServer()
+type Flag[T any] struct {
+	Usage     string
+	ShortName string
+	LongName  string
+	Value     T
+}
 
-	flag.Var(&tags, "tag", "question related tags")
-	flag.Var(&tags, "t", "question related tags")
-	flag.Var(&wrongAnswers, "wrong-answer", "question wrong answer(s)")
-	flag.Var(&wrongAnswers, "wa", "question wrong answer(s)")
-	flag.StringVar(&rigthAnswer, "rigth-answer", "", "question rigth answer")
-	flag.StringVar(&rigthAnswer, "ra", "", "question rigth answer")
+func (f Flag[T]) Names() (short, long string) {
+	return f.ShortName, f.LongName
+}
+
+func (f Flag[T]) FullUsage() string {
+	s := ""
+	short, long := f.Names()
+	if short != "" {
+		s += "-" + short
+	}
+	if long != "" {
+		s += ", --" + long
+	}
+	s += ":\n    " + f.Usage + "\n"
+	return s
+}
+
+type Command interface {
+	Name() string
+	Run([]string)
+	Usage() string
+}
+
+func usage() {
+	fmt.Print("Usage: eructl [command] [flags|arguments]\n\n")
+	for _, cmd := range commands {
+		fmt.Print(cmd.Usage())
+	}
+}
+
+func main() {
+	flag.Usage = usage
 	flag.Parse()
 
-	fmt.Printf("%v\n", tags)
-	fmt.Printf("%v\n", wrongAnswers)
-	fmt.Printf("%v\n", rigthAnswer)
+	checkServer()
+
+	if len(os.Args) < 2 {
+		fmt.Print("ERROR: one command must be informed\n\n")
+		usage()
+		return
+	}
+
+	command := os.Args[1]
+	for _, cmd := range commands {
+		if command == cmd.Name() {
+			cmd.Run(os.Args[2:])
+			return
+		}
+	}
+
+	fmt.Printf("ERROR: unknown command: %s\n\n", command)
+	usage()
 }
