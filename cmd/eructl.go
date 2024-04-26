@@ -55,7 +55,7 @@ func (f Flag[T]) FullUsage() string {
 
 type Command interface {
 	Name() string
-	Run([]string)
+	Run([]string) error
 	Usage() string
 }
 
@@ -81,7 +81,10 @@ func main() {
 	command := os.Args[1]
 	for _, cmd := range commands {
 		if command == cmd.Name() {
-			cmd.Run(os.Args[2:])
+			err := cmd.Run(os.Args[2:])
+			if err != nil {
+				fmt.Printf("ERROR: %v\n", err.Error())
+			}
 			return
 		}
 	}
