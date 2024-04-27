@@ -3,7 +3,19 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 )
+
+type CreateCommandRequest struct {
+	Text    string   `json:"text"`
+	Tags    []string `json:"tags"`
+	Answers []Answer `json:"answers"`
+}
+
+type Answer struct {
+	Text    string `json:"text"`
+	Correct bool   `json:"correct"`
+}
 
 type CreateCommand struct {
 	flagSet *flag.FlagSet
@@ -69,10 +81,30 @@ func (c CreateCommand) Run(args []string) error {
 		return fmt.Errorf("must have one rigth answer")
 	}
 
-	fmt.Printf("text=%v\n", c.Text)
-	fmt.Printf("tags=%v\n", c.TagFlag.Value)
-	fmt.Printf("rigth-answer=%v\n", c.RigthAnswerFlag.Value)
-	fmt.Printf("wrong-answer=%v\n", c.WrongAnswersFlag.Value)
+	answers := make([]Answer, 0)
+	answers = append(answers, Answer{Text: c.RigthAnswerFlag.Value, Correct: true})
+	for _, wa := range c.WrongAnswersFlag.Value {
+		answers = append(answers, Answer{Text: wa, Correct: false})
+	}
+
+	request := CreateCommandRequest{
+		Answers: answers,
+		Text:    c.Text,
+		Tags:    c.TagFlag.Value,
+	}
+
+	resp, err := server.Post("/questions", request)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println(string(body))
 
 	return nil
 }

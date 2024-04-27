@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"io"
 )
 
 type GetCommand struct {
@@ -38,7 +39,20 @@ func (c GetCommand) Run(args []string) error {
 		return err
 	}
 
-	fmt.Printf("id=%v\n", c.Id)
+	//TODO: Change this panicking to something better
+	resp, err := server.Get("/questions/" + c.Id)
+	if err != nil {
+		panic(err)
+	}
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println(string(body))
+
 	return nil
 }
 

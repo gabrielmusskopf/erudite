@@ -41,11 +41,17 @@ func write[V any](v V, w http.ResponseWriter) {
 }
 
 func (h *QuestionHandler) HandleQuestionCreation(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		writeError("", http.StatusMethodNotAllowed, w)
+		return
+	}
+
 	question := &Question{}
-	if err := json.NewDecoder(r.Body).Decode(question); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&question); err != nil {
 		writeError("could not decode request body", 400, w)
 		return
 	}
+	fmt.Printf("New question received (%+v)\n", question)
 
 	if len(question.Text) == 0 {
 		writeError("question should have a text", 400, w)
@@ -79,6 +85,7 @@ func (h *QuestionHandler) HandleQuestionCreation(w http.ResponseWriter, r *http.
 
 	QuestionDB.Save(question)
 	write(ResponseID{Id: question.Id}, w)
+	fmt.Println("New question saved")
 }
 
 func (h *QuestionHandler) HandleQuestionGet(w http.ResponseWriter, r *http.Request) {

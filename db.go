@@ -103,8 +103,8 @@ func (p *PostgreSQL) insertTags(tags []string) []int {
 	tagIds := make([]int, 0)
 
 	for _, tag := range tags {
-		var tagId int
 		tag = strings.ToUpper(tag)
+		var tagId int
 
 		err := p.db.
 			QueryRow("SELECT id FROM tags WHERE text = $1", tag).
@@ -127,21 +127,82 @@ func (p *PostgreSQL) insertTags(tags []string) []int {
 }
 
 func (p *PostgreSQL) Get(id int) *Question {
-	fmt.Println(id)
-
-	var text string
+	var questionText string
+	var questionCreationDate time.Time
 	err := p.db.
-		QueryRow("select text from questions where id = $1", id).
-		Scan(&text)
+		QueryRow("select text, creationdate from questions where id = $1 and deleted = false", id).
+		Scan(&questionText, &questionCreationDate)
 
 	if err != nil {
 		panic(err)
 	}
 
 	return &Question{
-		Id:   id,
-		Text: text,
+		Id:           id,
+		Text:         questionText,
+		CreationDate: questionCreationDate,
+		Tags:         p.getTags(id),
+		Answers:      p.getAnswers(id),
 	}
+}
+
+func (p PostgreSQL) getTags(id int) []string {
+	rows, err := p.db.Query(`
+select text from tags t 
+join questionstags q on t.id = q.tagid
+where q.questionid = $1`,
+		id)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	tags := make([]string, 0)
+	for rows.Next() {
+		var text string
+		err = rows.Scan(&text)
+		if err != nil {
+			panic(err)
+		}
+		tags = append(tags, text)
+	}
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	return tags
+}
+
+func (p PostgreSQL) getAnswers(id int) []Answer {
+	rows, err := p.db.
+		Query(`select id, text, correct from answers where questionid = $1`, id)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+
+	answers := make([]Answer, 0)
+	for rows.Next() {
+		var id int
+		var text string
+		var correct bool
+		err = rows.Scan(&id, &text, &correct)
+		if err != nil {
+			panic(err)
+		}
+		answers = append(answers, Answer{Id: id, Text: text, Correct: correct})
+	}
+	err = rows.Err()
+	if err != nil {
+		panic(err)
+	}
+
+	return answers
 }
 
 type InMemoryDb struct {

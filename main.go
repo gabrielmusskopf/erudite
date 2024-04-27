@@ -17,6 +17,7 @@ type Question struct {
 }
 
 type Answer struct {
+	Id      int    `json:"id"`
 	Text    string `json:"text"`
 	Correct bool   `json:"correct"`
 }
@@ -32,5 +33,5 @@ func main() {
 	configureDb()
 
 	fmt.Println("Listening on 8080")
-	log.Fatal(http.ListenAndServe(":8080", mux))
+	log.Fatal(http.ListenAndServe(":8080", nil))
 }
