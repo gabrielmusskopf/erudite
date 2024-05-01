@@ -13,9 +13,11 @@ import (
 
 var server = Server{URL: "http://localhost:8080"}
 
+var checkServer = NewCheckServerCommand()
 var commands = []Command{
 	NewCreateCommand(),
 	NewGetCommand(),
+	checkServer,
 }
 
 type Server struct {
@@ -60,13 +62,6 @@ func (s Server) Get(path string) (*http.Response, error) {
 	}
 
 	return r, nil
-}
-
-func checkServer() {
-	_, err := http.Get("http://localhost:8080/ping")
-	if err != nil {
-		panic(err)
-	}
 }
 
 type Flags []string
@@ -114,7 +109,7 @@ func usage() {
 	fmt.Print("Usage: eructl [command] [flags|arguments]\n\n")
 	fmt.Print("Commands:\n")
 	for _, cmd := range commands {
-		space := 10 - len(cmd.Name())
+		space := 15 - len(cmd.Name())
 		fmt.Printf("  %s %s %s\n", cmd.Name(), strings.Repeat(" ", space), cmd.Description())
 	}
 	fmt.Print("\nTip: eructl [command] -h\n")
@@ -123,8 +118,6 @@ func usage() {
 func main() {
 	flag.Usage = usage
 	flag.Parse()
-
-	checkServer()
 
 	if len(os.Args) < 2 {
 		fmt.Print("ERROR: one command must be informed\n\n")
@@ -135,8 +128,19 @@ func main() {
 	command := os.Args[1]
 	for _, cmd := range commands {
 		if command == cmd.Name() {
-			err := cmd.Run(os.Args[2:])
-			if err != nil {
+			args := os.Args[2:]
+
+			if err := checkServer.Run(args); err != nil {
+				fmt.Printf("ERROR: %v\n", err.Error())
+				return
+			}
+
+			if cmd == checkServer {
+				fmt.Println("pong")
+				return
+			}
+
+			if err := cmd.Run(args); err != nil {
 				fmt.Printf("ERROR: %v\n", err.Error())
 			}
 			return
