@@ -5,8 +5,8 @@ Basic functionality
 - [x] Get specific question
 - [ ] Get random question(s)
 - [ ] Get recommended question(s)
-- [ ] Answer a question
-- [ ] Get answer history
+- [x] Answer a question
+- [x] Get answer history
 
 Improvement
 - [ ] Export questions
