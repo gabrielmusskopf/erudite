@@ -22,6 +22,7 @@ func configureHandlers(mux *http.ServeMux) {
 
 	// answers
 	mux.Handle("/answers", Post(answerHandler.HandleQuestionAnswer))
+	mux.Handle("/answers/question/{id}", Get(answerHandler.HandleGetQuestionAnswers))
 
 	mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		_, _ = w.Write([]byte("Pong"))

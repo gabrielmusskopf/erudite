@@ -3,7 +3,9 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"strconv"
 )
 
 type AnswerHandler struct {
@@ -14,21 +16,7 @@ type QuestionAnswer struct {
 	AnswerId   int `json:"answerId"`
 }
 
-func containsAnswer(answerId int, question Question) bool {
-	for _, a := range question.Answers {
-		if a.Id == answerId {
-			return true
-		}
-	}
-	return false
-}
-
 func (h *AnswerHandler) HandleQuestionAnswer(w http.ResponseWriter, r *http.Request) {
-	// if r.Method != "POST" {
-	// 	writeError("", http.StatusMethodNotAllowed, w)
-	// 	return
-	// }
-
 	questionAnswer := &QuestionAnswer{}
 	if err := json.NewDecoder(r.Body).Decode(&questionAnswer); err != nil {
 		writeError("could not decode request body", 400, w)
@@ -47,5 +35,31 @@ func (h *AnswerHandler) HandleQuestionAnswer(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	AnswerDB.RegisterAnswer(questionAnswer.QuestionId, questionAnswer.AnswerId)
+	if err := AnswerDB.RegisterAnswer(questionAnswer.QuestionId, questionAnswer.AnswerId); err != nil {
+		writeError(err.Error(), 400, w)
+	}
+}
+
+func containsAnswer(answerId int, question Question) bool {
+	for _, a := range question.Answers {
+		if a.Id == answerId {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *AnswerHandler) HandleGetQuestionAnswers(w http.ResponseWriter, r *http.Request) {
+	id, err := strconv.Atoi(r.PathValue("id"))
+	if err != nil {
+		writeError("question id is not present", 400, w)
+		return
+	}
+
+	answers, err := AnswerDB.GetQuestionAnswered(id)
+	if err != nil {
+		log.Printf("ERROR: %v\n", err)
+	}
+
+	write(answers, w)
 }
