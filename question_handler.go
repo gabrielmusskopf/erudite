@@ -10,42 +10,11 @@ import (
 type QuestionHandler struct {
 }
 
-type ResponseError struct {
-	Status  int    `json:"status"`
-	Message string `json:"message,omitempty"`
-}
-
 type ResponseID struct {
 	Id int `json:"id"`
 }
 
-func writeError(msg string, status int, w http.ResponseWriter) {
-	error := &ResponseError{
-		Status: status,
-	}
-	if len(msg) != 0 {
-		error.Message = msg
-	}
-	b, err := json.Marshal(error)
-	if err != nil {
-		panic(fmt.Sprintf("could not marshal %v\n", err))
-	}
-	http.Error(w, string(b), status)
-}
-
-func write[V any](v V, w http.ResponseWriter) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(v); err != nil {
-		panic("could not serialize response")
-	}
-}
-
 func (h *QuestionHandler) HandleQuestionCreation(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		writeError("", http.StatusMethodNotAllowed, w)
-		return
-	}
-
 	question := &Question{}
 	if err := json.NewDecoder(r.Body).Decode(&question); err != nil {
 		writeError("could not decode request body", 400, w)
@@ -95,51 +64,11 @@ func (h *QuestionHandler) HandleQuestionGet(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	question := QuestionDB.Get(id)
-	if question == nil {
-		writeError("", 404, w)
+	question, err := QuestionDB.Get(id)
+	if err != nil {
+		writeError(err.Error(), 404, w)
 		return
 	}
 
 	write(question, w)
-}
-
-type QuestionAnswer struct {
-	QuestionId int
-	AnswerId   int
-}
-
-func containsAnswer(answerId int, question Question) bool {
-	for _, a := range question.Answers {
-		if a.Id == answerId {
-			return true
-		}
-	}
-	return false
-}
-
-func (h *QuestionHandler) HandleQuestionAnswer(w http.ResponseWriter, r *http.Request) {
-	if r.Method != "POST" {
-		writeError("", http.StatusMethodNotAllowed, w)
-		return
-	}
-
-	questionAnswer := &QuestionAnswer{}
-	if err := json.NewDecoder(r.Body).Decode(&questionAnswer); err != nil {
-		writeError("could not decode request body", 400, w)
-		return
-	}
-	fmt.Printf("New question answer received (%+v)\n", questionAnswer)
-
-	question := QuestionDB.Get(questionAnswer.QuestionId)
-	if question == nil {
-		writeError("invalid question id", 400, w)
-		return
-	}
-
-	if !containsAnswer(questionAnswer.QuestionId, *question) {
-		writeError("invalid answer id", 400, w)
-		return
-	}
-
 }

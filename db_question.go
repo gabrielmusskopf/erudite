@@ -10,7 +10,7 @@ import (
 
 type QuestionDatabase interface {
 	Save(*Question)
-	Get(int) *Question
+	Get(int) (*Question, error)
 }
 
 type questionDB struct {
@@ -84,7 +84,7 @@ func (p *questionDB) insertTags(tags []string) []int {
 	return tagIds
 }
 
-func (p questionDB) Get(id int) *Question {
+func (p questionDB) Get(id int) (*Question, error) {
 	var questionText string
 	var questionCreationDate time.Time
 	err := p.db.
@@ -92,7 +92,7 @@ func (p questionDB) Get(id int) *Question {
 		Scan(&questionText, &questionCreationDate)
 
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 
 	return &Question{
@@ -101,7 +101,7 @@ func (p questionDB) Get(id int) *Question {
 		CreationDate: questionCreationDate,
 		Tags:         p.getTags(id),
 		Answers:      p.getAnswers(id),
-	}
+	}, nil
 }
 
 func (p questionDB) getTags(id int) []string {

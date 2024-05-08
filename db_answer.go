@@ -7,17 +7,20 @@ import (
 )
 
 type AnswerDatabase interface {
-	Save(Answer)
-	Get(int) *Answer
+	RegisterAnswer(questionId, answerId int)
 }
 
 type answerDB struct {
 	db *sql.DB
 }
 
-func (p answerDB) Save(answer Answer) {
-}
+func (p answerDB) RegisterAnswer(questionId, answerId int) {
+	var id int
+	err := p.db.
+		QueryRow("INSERT INTO question_answers (question_id, answer_id) VALUES ($1, $2) RETURNING id", questionId, answerId).
+		Scan(&id)
 
-func (p answerDB) Get(id int) *Answer {
-	return nil
+	if err != nil {
+		panic(err)
+	}
 }
