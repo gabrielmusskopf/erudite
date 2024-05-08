@@ -33,5 +33,5 @@ func main() {
 	configureDb()
 
 	fmt.Println("Listening on 8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	log.Fatal(http.ListenAndServe(":8080", mux))
 }
