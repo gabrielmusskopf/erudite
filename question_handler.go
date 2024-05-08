@@ -103,3 +103,43 @@ func (h *QuestionHandler) HandleQuestionGet(w http.ResponseWriter, r *http.Reque
 
 	write(question, w)
 }
+
+type QuestionAnswer struct {
+	QuestionId int
+	AnswerId   int
+}
+
+func containsAnswer(answerId int, question Question) bool {
+	for _, a := range question.Answers {
+		if a.Id == answerId {
+			return true
+		}
+	}
+	return false
+}
+
+func (h *QuestionHandler) HandleQuestionAnswer(w http.ResponseWriter, r *http.Request) {
+	if r.Method != "POST" {
+		writeError("", http.StatusMethodNotAllowed, w)
+		return
+	}
+
+	questionAnswer := &QuestionAnswer{}
+	if err := json.NewDecoder(r.Body).Decode(&questionAnswer); err != nil {
+		writeError("could not decode request body", 400, w)
+		return
+	}
+	fmt.Printf("New question answer received (%+v)\n", questionAnswer)
+
+	question := QuestionDB.Get(questionAnswer.QuestionId)
+	if question == nil {
+		writeError("invalid question id", 400, w)
+		return
+	}
+
+	if !containsAnswer(questionAnswer.QuestionId, *question) {
+		writeError("invalid answer id", 400, w)
+		return
+	}
+
+}
