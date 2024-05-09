@@ -11,6 +11,11 @@ import (
 type QuestionDatabase interface {
 	Save(*Question)
 	Get(int) (*Question, error)
+	GetAny(GetQuestionOptions) ([]*Question, error)
+}
+
+type GetQuestionOptions struct {
+	tags []string
 }
 
 type questionDB struct {
@@ -102,6 +107,52 @@ func (p questionDB) Get(id int) (*Question, error) {
 		Tags:         p.getTags(id),
 		Answers:      p.getAnswers(id),
 	}, nil
+}
+
+// ('item 1', 'item 2')
+func makeDBSlice(s []string) string {
+	array := `(`
+	for i, item := range s {
+		array += `'` + item + `'`
+		if i != len(s)-1 {
+			array += `,`
+		}
+	}
+	array += `)`
+
+	return array
+}
+
+func (p questionDB) GetAny(options GetQuestionOptions) ([]*Question, error) {
+	questions := make([]*Question, 0)
+
+	query := `select q.id from questions q
+    join question_tags qt ON qt.question_id = q.id
+    join tags t ON t.id = qt.tag_id
+    where 1=1
+    `
+	if len(options.tags) > 0 {
+		query += `and t."text" in ` + makeDBSlice(options.tags)
+	}
+
+	rows, err := p.db.Query(query)
+	if err != nil {
+		return questions, err
+	}
+
+	for rows.Next() {
+		var id int
+		if err = rows.Scan(&id); err != nil {
+			return questions, err
+		}
+		q, err := p.Get(id)
+		if err != nil {
+			return questions, err
+		}
+		questions = append(questions, q)
+	}
+
+	return questions, nil
 }
 
 func (p questionDB) getTags(id int) []string {

@@ -64,9 +64,27 @@ func (h *QuestionHandler) HandleQuestionGet(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
+	query := r.URL.Query()
+	if !query.Has("tag") {
+	}
+
 	question, err := QuestionDB.Get(id)
 	if err != nil {
 		writeError(err.Error(), 404, w)
+		return
+	}
+
+	write(question, w)
+}
+
+func (h *QuestionHandler) HandleQuestionGetAny(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	question, err := QuestionDB.GetAny(GetQuestionOptions{
+		tags: query["tag"],
+	})
+	if err != nil {
+		writeError(err.Error(), 400, w)
 		return
 	}
 

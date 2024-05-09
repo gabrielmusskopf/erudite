@@ -19,6 +19,7 @@ func configureHandlers(mux *http.ServeMux) {
 	// questions
 	mux.Handle("/questions", Post(questionHandler.HandleQuestionCreation))
 	mux.Handle("/questions/{id}", Get(questionHandler.HandleQuestionGet))
+	mux.Handle("/questions/by", Get(questionHandler.HandleQuestionGetAny))
 
 	// answers
 	mux.Handle("/answers", Post(answerHandler.HandleQuestionAnswer))
