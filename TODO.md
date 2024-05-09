@@ -7,6 +7,8 @@ Basic functionality
 - [ ] Get recommended question(s)
 - [x] Answer a question
 - [x] Get answer history
+- [ ] Import questions
+- [ ] Support Latex; What can I do to improve readability when the question have math formulas?
 
 Improvement
 - [ ] Export questions

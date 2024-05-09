@@ -18,6 +18,7 @@ var commands = []Command{
 	NewCreateCommand(),
 	NewGetCommand(),
 	NewAnswerCommand(),
+	NewGetAnswersCommand(),
 	checkServer,
 }
 
