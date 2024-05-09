@@ -117,6 +117,15 @@ func usage() {
 	fmt.Print("\nTip: eructl [command] -h\n")
 }
 
+func containsHelp(args []string) bool {
+	for _, arg := range args {
+		if arg == "-h" || arg == "--help" {
+			return true
+		}
+	}
+	return false
+}
+
 func main() {
 	flag.Usage = usage
 	flag.Parse()
@@ -127,15 +136,18 @@ func main() {
 		return
 	}
 
+	if !containsHelp(os.Args[2:]) {
+		// only command help will be executed
+		if err := checkServer.Check(); err != nil {
+			fmt.Printf("ERROR: %v\n", err.Error())
+			return
+		}
+	}
+
 	command := os.Args[1]
 	for _, cmd := range commands {
 		if command == cmd.Name() {
 			args := os.Args[2:]
-
-			if err := checkServer.Check(); err != nil {
-				fmt.Printf("ERROR: %v\n", err.Error())
-				return
-			}
 
 			if err := cmd.Run(args); err != nil {
 				fmt.Printf("ERROR: %v\n", err.Error())

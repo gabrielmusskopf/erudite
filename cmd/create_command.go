@@ -62,7 +62,7 @@ func (c CreateCommand) Run(args []string) error {
 		return fmt.Errorf("text is missing")
 	}
 
-	if args[0] == "-h" || args[0] == "--help" {
+	if containsHelp(args) {
 		return c.flagSet.Parse(args)
 	}
 
