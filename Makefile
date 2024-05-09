@@ -3,4 +3,4 @@ server:
 	./bin/erudite-server
 
 eructl:
-	go build -o bin/eructl cmd/eructl.go
+	go build -o bin/eructl cmd/*.go
