@@ -15,11 +15,11 @@ var server = Server{URL: "http://localhost:8080"}
 
 var checkServer = NewCheckServerCommand()
 var commands = []Command{
-	NewCreateCommand(),
-	NewGetCommand(),
-	NewAnswerCommand(),
-	NewGetAnswersCommand(),
 	checkServer,
+	NewCreateCommand(),
+	NewAnswerCommand(),
+	NewGetQuestionCommand(),
+	NewGetAnswersCommand(),
 }
 
 type Server struct {

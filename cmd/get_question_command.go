@@ -6,24 +6,24 @@ import (
 	"io"
 )
 
-type GetCommand struct {
+type GetQuestionCommand struct {
 	flagSet *flag.FlagSet
 
 	Id string
 }
 
-func NewGetCommand() Command {
-	cmd := GetCommand{}
+func NewGetQuestionCommand() Command {
+	cmd := GetQuestionCommand{}
 	cmd.flagSet = flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
 	cmd.flagSet.Usage = cmd.Usage
 	return cmd
 }
 
-func (c GetCommand) Name() string {
-	return "get"
+func (c GetQuestionCommand) Name() string {
+	return "get-question"
 }
 
-func (c GetCommand) Run(args []string) error {
+func (c GetQuestionCommand) Run(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("id is missing")
 	}
@@ -56,11 +56,11 @@ func (c GetCommand) Run(args []string) error {
 	return nil
 }
 
-func (c GetCommand) Description() string {
+func (c GetQuestionCommand) Description() string {
 	return "Get question with provided identifier"
 }
 
-func (c GetCommand) Usage() {
+func (c GetQuestionCommand) Usage() {
 	fmt.Printf(
 		"%s\n\n%s <id>\n",
 		c.Description(),
