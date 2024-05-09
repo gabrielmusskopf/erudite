@@ -17,6 +17,7 @@ var checkServer = NewCheckServerCommand()
 var commands = []Command{
 	NewCreateCommand(),
 	NewGetCommand(),
+	NewAnswerCommand(),
 	checkServer,
 }
 
@@ -130,13 +131,8 @@ func main() {
 		if command == cmd.Name() {
 			args := os.Args[2:]
 
-			if err := checkServer.Run(args); err != nil {
+			if err := checkServer.Check(); err != nil {
 				fmt.Printf("ERROR: %v\n", err.Error())
-				return
-			}
-
-			if cmd == checkServer {
-				fmt.Println("pong")
 				return
 			}
 

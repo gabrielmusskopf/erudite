@@ -10,7 +10,7 @@ type CheckServerCommand struct {
 	flagSet *flag.FlagSet
 }
 
-func NewCheckServerCommand() Command {
+func NewCheckServerCommand() CheckServerCommand {
 	cmd := CheckServerCommand{}
 	cmd.flagSet = flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
 	cmd.flagSet.Usage = cmd.Usage
@@ -21,17 +21,20 @@ func (c CheckServerCommand) Name() string {
 	return "check-server"
 }
 
-func (c CheckServerCommand) Run(args []string) error {
-	err := c.flagSet.Parse(args)
-	if err != nil {
-		return err
-	}
-
-	_, err = http.Get(server.URL + "/ping")
+func (c CheckServerCommand) Check() error {
+	_, err := http.Get(server.URL + "/ping")
 	if err != nil {
 		return fmt.Errorf("Server is unreachable: %s", server.URL)
 	}
+	return nil
+}
 
+func (c CheckServerCommand) Run(args []string) error {
+	c.flagSet.Parse(args)
+	if err := c.Check(); err != nil {
+		return err
+	}
+	fmt.Println("Server is fine :)")
 	return nil
 }
 

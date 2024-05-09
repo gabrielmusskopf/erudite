@@ -115,7 +115,7 @@ func (c CreateCommand) Description() string {
 
 func (c CreateCommand) Usage() {
 	fmt.Printf(
-		"%s\n\n%s <text>:\n%s\n%s\n%s",
+		"%s\n\n%s <text>:\n%s\n%s\n%s\n",
 		c.Description(),
 		c.Name(),
 		c.TagFlag.FullUsage(),
