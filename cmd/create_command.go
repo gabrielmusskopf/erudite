@@ -62,9 +62,9 @@ func (c CreateCommand) Run(args []string) error {
 		return fmt.Errorf("text is missing")
 	}
 
-	if containsHelp(args) {
-		return c.flagSet.Parse(args)
-	}
+	// if containsHelp(args) {
+	// 	return c.flagSet.Parse(args)
+	// }
 
 	c.Text = args[0]
 
