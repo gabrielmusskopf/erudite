@@ -20,9 +20,7 @@ func NewGetAnswersCommand() Command {
 }
 
 func (c GetAnswersCommand) Name() string {
-	//TODO: Implement get with subcommands.
-	//Like "eructl get answer ..." and "eructl get question ..."
-	return "get-answers"
+	return "answers"
 }
 
 func (c GetAnswersCommand) Run(args []string) error {

@@ -12,14 +12,113 @@ import (
 )
 
 var server = Server{URL: "http://localhost:8080"}
-
 var checkServer = NewCheckServerCommand()
-var commands = []Command{
-	checkServer,
-	NewCreateCommand(),
-	NewAnswerCommand(),
-	NewGetQuestionCommand(),
-	NewGetAnswersCommand(),
+
+type Command interface {
+	Name() string
+	Description() string
+	Run([]string) error
+}
+
+type EructlCommand struct {
+	flagSet  *flag.FlagSet
+	commands []Command
+}
+
+func NewEructlCommand() EructlCommand {
+	cmd := EructlCommand{
+		commands: []Command{
+			checkServer,
+			NewCreateCommand(),
+			NewAnswerCommand(),
+			NewGetSubCommand(),
+		},
+	}
+
+	flagSet := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
+	flagSet.Usage = cmd.Usage
+
+	cmd.flagSet = flagSet
+
+	return cmd
+}
+
+func (c EructlCommand) Name() string {
+	return "eructl"
+}
+
+func (c EructlCommand) Run(args []string) error {
+	c.flagSet.Parse(args)
+
+	if len(c.flagSet.Args()) < 1 {
+		fmt.Print("ERROR: one command must be informed\n\n")
+		c.Usage()
+		return nil
+	}
+
+	if err := CheckServer(c.flagSet.Args()[1:]); err != nil {
+		return err
+	}
+
+	if err := IterateCommands(c.flagSet.Args(), c.commands); err != nil {
+		fmt.Println(err.Error())
+		c.Usage()
+	}
+
+	return nil
+}
+
+func (c EructlCommand) Description() string {
+	return ""
+}
+
+func (c EructlCommand) Usage() {
+	CommandsUsage(c.Name(), c.commands)
+}
+
+func CommandsUsage(commandName string, commands []Command) {
+	fmt.Printf("Usage: %s [command] [flags|arguments]\n\n", commandName)
+	fmt.Print("Commands:\n")
+	for _, cmd := range commands {
+		space := 15 - len(cmd.Name())
+		fmt.Printf("  %s %s %s\n", cmd.Name(), strings.Repeat(" ", space), cmd.Description())
+	}
+	fmt.Printf("\nTip: %s [command] -h\n", commandName)
+}
+
+func containsHelp(args []string) bool {
+	for _, arg := range args {
+		if arg == "-h" || arg == "--help" {
+			return true
+		}
+	}
+	return false
+}
+
+func CheckServer(args []string) error {
+	if !containsHelp(args) {
+		// only command help will be executed
+		if err := checkServer.Check(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func IterateCommands(args []string, subcommands []Command) error {
+	name := args[0]
+	for _, cmd := range subcommands {
+		if name == cmd.Name() {
+			args := args[1:]
+
+			if err := cmd.Run(args); err != nil {
+				fmt.Printf("ERROR: %v\n", err.Error())
+			}
+			return nil
+		}
+	}
+
+	return fmt.Errorf("ERROR: unknown command: %s\n", name)
 }
 
 type Server struct {
@@ -101,61 +200,9 @@ func (f Flag[T]) FullUsage() string {
 	return s
 }
 
-type Command interface {
-	Name() string
-	Description() string
-	Run([]string) error
-}
-
-func usage() {
-	fmt.Print("Usage: eructl [command] [flags|arguments]\n\n")
-	fmt.Print("Commands:\n")
-	for _, cmd := range commands {
-		space := 15 - len(cmd.Name())
-		fmt.Printf("  %s %s %s\n", cmd.Name(), strings.Repeat(" ", space), cmd.Description())
-	}
-	fmt.Print("\nTip: eructl [command] -h\n")
-}
-
-func containsHelp(args []string) bool {
-	for _, arg := range args {
-		if arg == "-h" || arg == "--help" {
-			return true
-		}
-	}
-	return false
-}
-
 func main() {
-	flag.Usage = usage
-	flag.Parse()
-
-	if len(os.Args) < 2 {
-		fmt.Print("ERROR: one command must be informed\n\n")
-		usage()
-		return
+	eructl := NewEructlCommand()
+	if err := eructl.Run(os.Args[1:]); err != nil {
+		fmt.Printf("ERROR: %v\n", err.Error())
 	}
-
-	if !containsHelp(os.Args[2:]) {
-		// only command help will be executed
-		if err := checkServer.Check(); err != nil {
-			fmt.Printf("ERROR: %v\n", err.Error())
-			return
-		}
-	}
-
-	command := os.Args[1]
-	for _, cmd := range commands {
-		if command == cmd.Name() {
-			args := os.Args[2:]
-
-			if err := cmd.Run(args); err != nil {
-				fmt.Printf("ERROR: %v\n", err.Error())
-			}
-			return
-		}
-	}
-
-	fmt.Printf("ERROR: unknown command: %s\n\n", command)
-	usage()
 }

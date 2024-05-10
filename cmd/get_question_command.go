@@ -32,7 +32,7 @@ func NewGetQuestionCommand() Command {
 }
 
 func (c GetQuestionCommand) Name() string {
-	return "get-question"
+	return "question"
 }
 
 func (c GetQuestionCommand) Run(args []string) error {
