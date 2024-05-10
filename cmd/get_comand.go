@@ -3,11 +3,11 @@ package main
 import (
 	"flag"
 	"fmt"
-	"strings"
 )
 
 type GetSubCommand struct {
-	flagSet  *flag.FlagSet
+	flagSet *flag.FlagSet
+
 	commands []Command
 }
 
@@ -20,7 +20,10 @@ func NewGetSubCommand() GetSubCommand {
 	}
 
 	flagSet := flag.NewFlagSet(cmd.Name(), flag.ExitOnError)
-	flagSet.Usage = cmd.Usage
+	flagSet.Usage = func() {
+		fmt.Println(cmd.Description() + "\n")
+		cmd.Usage()
+	}
 
 	cmd.flagSet = flagSet
 
@@ -34,37 +37,33 @@ func (c GetSubCommand) Name() string {
 func (c GetSubCommand) Run(args []string) error {
 	c.flagSet.Parse(args)
 
-	if len(c.flagSet.Args()) < 2 {
-		fmt.Print("ERROR: one subcommand must be informed\n\n")
-		c.Usage()
-		return nil
+	if len(c.flagSet.Args()) < 1 {
+		return userErr{msg: "one subcommand must be informed", command: c}
 	}
 
-	if !containsHelp(c.flagSet.Args()) {
-		// only command help will be executed
-		if err := checkServer.Check(); err != nil {
-			fmt.Printf("ERROR: %v\n", err.Error())
-			return nil
+	if err := CheckServer(c.flagSet.Args()); err != nil {
+		return err
+	}
+
+	executedCmd, err := FindAndRunCommand(c.flagSet.Args(), c.commands)
+	if err != nil {
+		if executedCmd == nil {
+			return parseUserErr(c, err)
 		}
-	}
-
-	if err := IterateCommands(c.flagSet.Args(), c.commands); err != nil {
-		fmt.Println(err.Error())
-		c.Usage()
+		return parseUserErr(executedCmd, err)
 	}
 
 	return nil
 }
 
 func (c GetSubCommand) Description() string {
-	return "Get subcommand"
+	return "Get resources from Erudite server"
+}
+
+func (c GetSubCommand) Commands() []Command {
+	return c.commands
 }
 
 func (c GetSubCommand) Usage() {
-	fmt.Printf("Usage: eructl %s [command] [flags|arguments]\n\n", c.Name())
-	fmt.Print("Commands:\n")
-	for _, cmd := range c.commands {
-		space := 15 - len(cmd.Name())
-		fmt.Printf("  %s %s %s\n", cmd.Name(), strings.Repeat(" ", space), cmd.Description())
-	}
+	CommandsUsage(c)
 }
