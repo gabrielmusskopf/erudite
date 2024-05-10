@@ -11,7 +11,7 @@ import (
 type QuestionDatabase interface {
 	Save(*Question)
 	Get(int) (*Question, error)
-	GetAny(GetQuestionOptions) ([]*Question, error)
+	GetAny(GetQuestionOptions) ([]Question, error)
 }
 
 type GetQuestionOptions struct {
@@ -123,8 +123,8 @@ func makeDBSlice(s []string) string {
 	return array
 }
 
-func (p questionDB) GetAny(options GetQuestionOptions) ([]*Question, error) {
-	questions := make([]*Question, 0)
+func (p questionDB) GetAny(options GetQuestionOptions) ([]Question, error) {
+	questions := make([]Question, 0)
 
 	query := `select q.id from questions q
     join question_tags qt ON qt.question_id = q.id
@@ -149,7 +149,7 @@ func (p questionDB) GetAny(options GetQuestionOptions) ([]*Question, error) {
 		if err != nil {
 			return questions, err
 		}
-		questions = append(questions, q)
+		questions = append(questions, *q)
 	}
 
 	return questions, nil

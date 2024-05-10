@@ -90,3 +90,21 @@ func (h *QuestionHandler) HandleQuestionGetAny(w http.ResponseWriter, r *http.Re
 
 	write(question, w)
 }
+
+func (h *QuestionHandler) HandleQuestionGetByWorstTag(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+
+	limit := 1
+	if len(query["limit"]) == 1 {
+		l, err := strconv.Atoi(query["limit"][0])
+		if err == nil {
+			limit = l
+		}
+	}
+
+	questions := BasedOnWorstTag(RecommendationOptions{
+		limit: limit,
+	})
+
+	write(questions, w)
+}
