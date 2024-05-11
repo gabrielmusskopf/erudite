@@ -18,6 +18,7 @@ func NewEructlCommand() EructlCommand {
 			NewCreateCommand(),
 			NewAnswerCommand(),
 			NewGetSubCommand(),
+			NewGetRecommendedCommand(),
 		},
 	}
 

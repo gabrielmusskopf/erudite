@@ -31,10 +31,10 @@ func (f Flag[T]) FullUsage() string {
 	s := "  "
 	short, long := f.Names()
 	if short != "" {
-		s += "-" + short
-	}
+		s += "-" + short + ", "
+	 }
 	if long != "" {
-		s += ", --" + long
+		s += "--" + long
 	}
 	s += ":" + strings.Repeat(" ", 25-len(s)) + f.Usage
 	return s

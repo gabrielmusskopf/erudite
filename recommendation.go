@@ -63,6 +63,9 @@ func BasedOnWorstTag(options RecommendationOptions) []Question {
 	if options.limit <= 0 {
 		options.limit = 1
 	}
+	if options.limit > len(lowestScoreQuestions) {
+		options.limit = len(lowestScoreQuestions) - 1
+	}
 
 	for i := 0; i < options.limit; i++ {
 		selected = append(selected, lowestScoreQuestions[rand.Intn(len(lowestScoreQuestions))])
